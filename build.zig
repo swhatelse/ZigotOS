@@ -41,21 +41,17 @@ pub fn build(b: *std.Build) void {
     // Create boot image
     const isodir_path = "zig-out/isodir";
     const mkdir_isodir = b.addSystemCommand(&.{ "mkdir", "-p", isodir_path ++ "/boot/grub" });
-    const mkdir_isodir_step = b.step("mk_isodir", "Create iso directory");
-    mkdir_isodir_step.dependOn(&kernel.step);
+    mkdir_isodir.step.dependOn(kernel_step);
 
     const copy_kernel = b.addSystemCommand(&.{ "cp", out_elf, isodir_path ++ "/boot/" ++ kernel_elf });
-    const copy_kernel_step = b.step("copy_kernel", "Copy kernel");
-    copy_kernel_step.dependOn(&mkdir_isodir.step);
+    copy_kernel.step.dependOn(&mkdir_isodir.step);
 
     const copy_grub_cfg = b.addSystemCommand(&.{ "cp", "src/grub.cfg", isodir_path ++ "/boot/grub/grub.cfg" });
-    const copy_grub_cfg_step = b.step("copy_grub_cfg", "Copy kernel");
-    copy_grub_cfg_step.dependOn(&copy_kernel.step);
+    copy_grub_cfg.step.dependOn(&copy_kernel.step);
 
     const iso_path = isodir_path;
     const make_iso = b.addSystemCommand(&.{ "grub-mkrescue", "-o", iso_path ++ "/ZigotOS.iso", isodir_path });
-    const make_iso_step = b.step("make_iso", "Copy kernel");
-    make_iso_step.dependOn(&copy_grub_cfg.step);
+    make_iso.step.dependOn(&copy_grub_cfg.step);
 
     const build_iso_step = b.step("build_iso", "Build kernel iso");
     build_iso_step.dependOn(&make_iso.step);
